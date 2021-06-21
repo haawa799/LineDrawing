@@ -11,7 +11,7 @@ import UIKit
 @available(iOS 10, *)
 public class LayersView: UIView {
     
-    private let renderView: LayersRenderView?
+    private var renderView: LayersRenderView?
     public var layers: [DrawingLayer] = [] {
         didSet {
             renderView?.layers = layers
@@ -23,16 +23,19 @@ public class LayersView: UIView {
         }
     }
     
-    public override init(frame: CGRect) {
-        self.renderView = try? LayersRenderView(label: "MyView")
-        super.init(frame: frame)
+    public convenience init(device: MTLDevice?, frame: CGRect) throws {
+        self.init(frame: frame)
+        self.renderView = try LayersRenderView(device: device,
+                                               label: "MyView")
         commonSetup()
     }
     
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
     required init?(coder aDecoder: NSCoder) {
-        self.renderView = try? LayersRenderView(label: "MyView")
         super.init(coder: aDecoder)
-        commonSetup()
     }
     
     private func commonSetup() {
@@ -46,16 +49,5 @@ public class LayersView: UIView {
         trailingAnchor.constraint(equalTo: renderView.trailingAnchor).isActive = true
         topAnchor.constraint(equalTo: renderView.topAnchor).isActive = true
         bottomAnchor.constraint(equalTo: renderView.bottomAnchor).isActive = true
-    }
-}
-
-public extension LayersView  {
-    
-    var device: MTLDevice? {
-        return renderView?.device
-    }
-    
-    var sampleCount: Int {
-        return renderView?.sampleCount ?? 0
     }
 }

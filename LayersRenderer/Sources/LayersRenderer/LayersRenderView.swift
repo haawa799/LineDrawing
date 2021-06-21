@@ -28,13 +28,14 @@ final class LayersRenderView: UIView, LayersRenderViewProtocol {
     let sampleCount: Int
     var clearColor = DrawingColor(r: 1, g: 1, b: 1, a: 1)
     
-    required init(label: String) throws {
-        guard let device = MTLCreateSystemDefaultDevice(),
-            let library = try? device.makeLibrary(source: shadersString,
-                                                  options: nil),
-            let commandQueue = device.makeCommandQueue() else {
-                throw "Setup error. Simulators don't support Metal."
+    required init(device: MTLDevice?, label: String) throws {
+        
+        guard let device = device,
+              let commandQueue = device.makeCommandQueue() else {
+                throw "Setup error. Most likely MTLDevice not provided"
         }
+        let library = try device.makeDefaultLibrary(bundle: Bundle.module)
+        
         self.label = label
         self.device = device
         self.library = library
@@ -52,7 +53,7 @@ final class LayersRenderView: UIView, LayersRenderViewProtocol {
         pipelineStateDescriptor.vertexFunction = vertexProgram
         pipelineStateDescriptor.fragmentFunction = fragmentProgram
         pipelineStateDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
-        pipelineState = try! device.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
+        pipelineState = try device.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
         super.init(frame: CGRect.zero)
         commonSetup()
     }
@@ -63,6 +64,7 @@ final class LayersRenderView: UIView, LayersRenderViewProtocol {
     
     private func commonSetup() {
         let metalView = MTKView(frame: bounds, device: device)
+        metalView.preferredFramesPerSecond = 120
         metalView.sampleCount = sampleCount
         self.addSubview(metalView)
         metalView.translatesAutoresizingMaskIntoConstraints = false
